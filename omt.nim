@@ -1,4 +1,5 @@
 from random import randomize, sample
+from sequtils import filter
 import yaml/serialization, streams
 
 # Call randomize() once to initialize the default random number generator
@@ -10,11 +11,22 @@ type
   ConfigRoot = object
     defaultList: seq[string]
 
+# Load Config #
+
+let configStream = newFileStream("omt.yaml")
 var configRoot: ConfigRoot
+load(configStream, configRoot)
+configStream.close()
 
-var stream = newFileStream("omt.yaml")
+let thing = sample(configRoot.defaultList)
+let filteredList = filter(configRoot.defaultList, proc (item: string): bool =
+  item != thing)
 
-load(stream, configRoot)
-stream.close()
+echo "Default: " & configRoot.defaultList
+echo "Sample: " & thing
+echo "Filtered List: " & filteredList
 
-echo sample(configRoot.defaultList)
+let filteredListOutputStream = newFileStream("filtered.yaml", fmWrite)
+dump(filteredList, filteredListOutputStream)
+filteredListOutputStream.close()
+

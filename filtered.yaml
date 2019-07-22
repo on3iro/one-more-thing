@@ -1,0 +1,12 @@
+%YAML 1.2
+%TAG !n! tag:nimyaml.org,2016:
+--- !n!system:seq(tag:yaml.org;2002:str) 
+- Wipeout
+- Worms
+- Just dance
+- "Let's Sing"
+- Tetris
+- Screen Cheat
+- Johann Sebastian Joust
+- Towerfall Ascension
+- Brawlhalla
