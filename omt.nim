@@ -72,7 +72,10 @@ proc handleGet(optParser: var OptParser, defaultList: seq[Thing]): void =
   while true:
     optParser.next()
     case optParser.kind
-    of cmdEnd: break
+    of cmdEnd:
+      if len(things) == 0:
+        things = getFilteredThingsOrDefault(defaultList)
+      break
     of cmdShortOption, cmdLongOption:
       case optParser.key
       of "d", "dry":
@@ -80,7 +83,7 @@ proc handleGet(optParser: var OptParser, defaultList: seq[Thing]): void =
       of "s", "string":
         load(optParser.val, things)
       else:
-        things = getFilteredThingsOrDefault(defaultList)
+        # just ignore unwanted flags
         break
     of cmdArgument:
       raise newException(IOError, "Only a single argument is allowed!")
@@ -126,6 +129,9 @@ while true:
     if find(commandLineParams(), optParser.key) != 0:
       raise newException(IOError, "Arguments have to directly follow the <omt> command!")
     case optParser.key
+    of "help":
+      showHelp()
+      quit()
     of "create":
       echo "Argument: ", optParser.key
     of "get":
