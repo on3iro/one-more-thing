@@ -62,8 +62,8 @@ proc writeRestToOutputFile(rest: seq[Thing]): void =
   filteredOutputFileStream.close()
 
 proc resetRest(): void =
-  # TODO
-  echo "TODO: implement!"
+  echo "Removing save file: " & SAVE_FILE & "..."
+  removeFile(SAVE_FILE)
 
 proc showHelp(): void =
   # TODO
