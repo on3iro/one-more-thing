@@ -61,8 +61,47 @@ proc writeRestToOutputFile(rest: seq[Thing]): void =
   dump(rest, filteredOutputFileStream)
   filteredOutputFileStream.close()
 
+proc resetRest(): void =
+  # TODO
+  echo "TODO: implement!"
+
 proc showHelp(): void =
+  # TODO
   echo "TODO help!"
+
+proc createOMTProject(optParser: var OptParser): void =
+  var projectPath: string = ""
+
+  while true:
+    optParser.next()
+    case optParser.kind
+    of cmdArgument:
+      if len(projectPath) == 0:
+        projectPath = optParser.key
+      else:
+        discard
+    of cmdShortOption, cmdLongOption:
+      case optParser.key
+      # There are currently no options for this command!
+      else:
+        discard
+    of cmdEnd:
+      break
+
+  if len(projectPath) == 0:
+    raise newException(IOError, "No project path given! Please specify a project path!")
+
+  let dirExists = existsOrCreateDir(projectPath)
+
+  if dirExists:
+    echo "Project already exists!"
+    quit()
+
+  echo "Creating project..."
+
+  let configFileOutputStream = newFileStream(joinPath(projectPath, OMT_CONFIG), fmWrite)
+  dump(ConfigRoot(defaultList: @[]), configFileOutputStream)
+  configFileOutputStream.close()
 
 proc handleGet(optParser: var OptParser): void =
   var
@@ -78,6 +117,10 @@ proc handleGet(optParser: var OptParser): void =
         dryrun = true
       of "s", "string":
         load(optParser.val, things)
+      of "f", "file":
+        echo "TODO: implement --file flag!"
+      of "o", "output":
+        echo "TODO: implement --output flag!"
       else:
         # just ignore unwanted flags
         break
@@ -112,31 +155,35 @@ proc handleGet(optParser: var OptParser): void =
 
   quit()
 
+
 #################
 # Actual Script #
 #################
 
-# Parse arguments #
+proc main(): void =
+  if paramCount() == 0:
+    showHelp()
+    quit()
 
-if paramCount() == 0:
-  showHelp()
-  quit()
+  var optParser = initOptParser(commandLineParams())
+  while true:
+    optParser.next()
+    case optParser.kind
+    of cmdEnd: break
+    of cmdShortOption, cmdLongOption:
+        raise newException(IOError, "Flag [" & optParser.key & "] is not allowed in this position!")
+    of cmdArgument:
+      if find(commandLineParams(), optParser.key) != 0:
+        raise newException(IOError, "Arguments have to directly follow the <omt> command!")
+      case optParser.key
+      of "help":
+        showHelp()
+        quit()
+      of "create":
+        createOMTProject(optParser)
+      of "get":
+        handleGet(optParser)
+      of "reset":
+        resetRest()
 
-var optParser = initOptParser(commandLineParams())
-while true:
-  optParser.next()
-  case optParser.kind
-  of cmdEnd: break
-  of cmdShortOption, cmdLongOption:
-      raise newException(IOError, "Flag [" & optParser.key & "] is not allowed in this position!")
-  of cmdArgument:
-    if find(commandLineParams(), optParser.key) != 0:
-      raise newException(IOError, "Arguments have to directly follow the <omt> command!")
-    case optParser.key
-    of "help":
-      showHelp()
-      quit()
-    of "create":
-      echo "Argument: ", optParser.key
-    of "get":
-      handleGet(optParser)
+main()
