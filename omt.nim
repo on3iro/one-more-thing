@@ -16,6 +16,42 @@ type
 type
   Thing = string
 
+##############
+# Procedures #
+##############
+
+proc getThingAndRest(things: seq[Thing]): tuple[thing: Thing, rest: seq[Thing]] =
+  let thing = sample(things)
+  let filteredList = filter(things, proc (item: Thing): bool =
+    item != thing)
+  return (thing: thing, rest: filteredList)
+
+proc retrieveOMTConfig(): ConfigRoot =
+  let configStream = newFileStream("omt.yaml")
+  var configRoot: ConfigRoot
+  load(configStream, configRoot)
+  configStream.close()
+  return configRoot
+
+proc getFilteredThingsOrDefault(defaultList: seq[Thing]): seq[Thing] =
+  let filteredListFileStream = newFileStream("filtered.yaml", fmRead)
+  var things: seq[Thing]
+  if not(isNil(filteredListFileStream)):
+    load(filteredListFileStream, things)
+    filteredListFileStream.close()
+    return things
+  else:
+    return defaultList
+
+proc writeRestToOutputFile(rest: seq[Thing]): void =
+  let filteredOutputFileStream = newFileStream("filtered.yaml", fmWrite)
+  dump(rest, filteredOutputFileStream)
+  filteredOutputFileStream.close()
+
+#################
+# Actual Script #
+#################
+
 # Parse arguments #
 
 var params = initOptParser(commandLineParams())
@@ -32,40 +68,16 @@ while true:
     echo "Argument: ", params.key
 
 # Load Config #
+let configRoot = retrieveOMTConfig()
 
-let configStream = newFileStream("omt.yaml")
-var configRoot: ConfigRoot
-load(configStream, configRoot)
-configStream.close()
+let things = getFilteredThingsOrDefault(configRoot.defaultList)
+let sampleResult = getThingAndRest(things)
+writeRestToOutputFile(sampleResult.rest)
 
-# Open output file #
-let filteredListFileStream = newFileStream("filtered.yaml", fmRead)
-
-# Get thing list #
-
-var things: seq[Thing]
-if not(isNil(filteredListFileStream)):
-  load(filteredListFileStream, things)
-  filteredListFileStream.close()
-else:
-  things = configRoot.defaultList
-
-# Get Sample #
-
-let thing = sample(things)
-let filteredList = filter(things, proc (item: string): bool =
-  item != thing)
-
-# Generate output file #
-
-let filteredOutputFileStream = newFileStream("filtered.yaml", fmWrite)
-dump(filteredList, filteredOutputFileStream)
-filteredOutputFileStream.close()
 
 # Some CLI output
 
 echo "Default: " & configRoot.defaultList
 echo "Things: " & things
-echo "Sample: " & thing
-echo "Filtered List: " & filteredList
-
+echo "Sample: " & sampleResult.thing
+echo "Filtered List: " & sampleResult.rest
