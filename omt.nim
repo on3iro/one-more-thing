@@ -21,6 +21,14 @@ type
     defaultList: seq[Thing]
 
 
+#############
+# Constants #
+#############
+
+const OMT_CONFIG = "omt.yaml"
+const SAVE_FILE = "filtered.yaml"
+
+
 ##############
 # Procedures #
 ##############
@@ -32,14 +40,14 @@ proc getThingAndRest(things: seq[Thing]): tuple[thing: Thing, rest: seq[Thing]] 
   return (thing: thing, rest: filteredList)
 
 proc retrieveOMTConfig(): ConfigRoot =
-  let configStream = newFileStream("omt.yaml")
+  let configStream = newFileStream(OMT_CONFIG)
   var configRoot: ConfigRoot
   load(configStream, configRoot)
   configStream.close()
   return configRoot
 
 proc getFilteredThingsOrDefault(defaultList: seq[Thing]): seq[Thing] =
-  let filteredListFileStream = newFileStream("filtered.yaml", fmRead)
+  let filteredListFileStream = newFileStream(SAVE_FILE, fmRead)
   var things: seq[Thing]
   if not(isNil(filteredListFileStream)):
     load(filteredListFileStream, things)
@@ -49,12 +57,50 @@ proc getFilteredThingsOrDefault(defaultList: seq[Thing]): seq[Thing] =
     return defaultList
 
 proc writeRestToOutputFile(rest: seq[Thing]): void =
-  let filteredOutputFileStream = newFileStream("filtered.yaml", fmWrite)
+  let filteredOutputFileStream = newFileStream(SAVE_FILE, fmWrite)
   dump(rest, filteredOutputFileStream)
   filteredOutputFileStream.close()
 
 proc showHelp(): void =
   echo "TODO help!"
+
+proc handleGet(optParser: var OptParser, defaultList: seq[Thing]): void =
+  var
+    things: seq[Thing]
+    dryrun: bool = false
+
+  while true:
+    optParser.next()
+    case optParser.kind
+    of cmdEnd: break
+    of cmdShortOption, cmdLongOption:
+      case optParser.key
+      of "d", "dry":
+        dryrun = true
+      of "s", "string":
+        load(optParser.val, things)
+      else:
+        things = getFilteredThingsOrDefault(defaultList)
+        break
+    of cmdArgument:
+      raise newException(IOError, "Only a single argument is allowed!")
+
+  if things.len == 0:
+    echo "List is empty!"
+    quit()
+
+  let sampleResult = getThingAndRest(things)
+
+  if not dryrun:
+    writeRestToOutputFile(sampleResult.rest)
+
+  # Some CLI output
+  echo "Default: " & defaultList
+  echo "Things: " & things
+  echo "Sample: " & sampleResult.thing
+  echo "Filtered List: " & sampleResult.rest
+
+  quit()
 
 #################
 # Actual Script #
@@ -69,30 +115,18 @@ if paramCount() == 0:
   showHelp()
   quit()
 
-var params = initOptParser(commandLineParams())
+var optParser = initOptParser(commandLineParams())
 while true:
-  params.next()
-  case params.kind
+  optParser.next()
+  case optParser.kind
   of cmdEnd: break
   of cmdShortOption, cmdLongOption:
-    if params.val == "":
-      echo "Option: ", params.key
-    else:
-      echo "Option and Value ", params.key, ", ", params.val
+      raise newException(IOError, "Flag [" & optParser.key & "] is not allowed in this position!")
   of cmdArgument:
-    if params.pos != 0:
-      raise newException(IOError, "Error: Arguments have to directly follow the <omt> command!")
-    case params.key
+    if find(commandLineParams(), optParser.key) != 0:
+      raise newException(IOError, "Arguments have to directly follow the <omt> command!")
+    case optParser.key
     of "create":
-      echo "Argument: ", params.key
+      echo "Argument: ", optParser.key
     of "get":
-      let things = getFilteredThingsOrDefault(configRoot.defaultList)
-      let sampleResult = getThingAndRest(things)
-      writeRestToOutputFile(sampleResult.rest)
-
-      # Some CLI output
-      echo "Default: " & configRoot.defaultList
-      echo "Things: " & things
-      echo "Sample: " & sampleResult.thing
-      echo "Filtered List: " & sampleResult.rest
-
+      handleGet(optParser, configRoot.defaultList)
