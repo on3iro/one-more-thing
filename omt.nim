@@ -18,7 +18,7 @@ type
 
 type
   ConfigRoot = object
-    defaultList: seq[Thing]
+    thingList: seq[Thing]
 
 
 #############
@@ -39,6 +39,11 @@ proc getThingAndRest(things: seq[Thing]): tuple[thing: Thing, rest: seq[Thing]] 
     item != thing)
   return (thing: thing, rest: filteredList)
 
+proc createOMTConfig(things: seq[Thing], outputPath: string): void =
+  let configFileOutputStream = newFileStream(outputPath, fmWrite)
+  dump(ConfigRoot(thingList: things), configFileOutputStream)
+  configFileOutputStream.close()
+
 proc retrieveOMTConfigFromFile(path: string): ConfigRoot =
   let configStream = newFileStream(path)
   var configRoot: ConfigRoot
@@ -48,20 +53,17 @@ proc retrieveOMTConfigFromFile(path: string): ConfigRoot =
 
 proc retrieveOMTConfig(): ConfigRoot = retrieveOMTConfigFromFile(OMT_CONFIG)
 
-proc getFilteredThingsOrDefault(defaultList: seq[Thing]): seq[Thing] =
-  let filteredListFileStream = newFileStream(SAVE_FILE, fmRead)
-  var things: seq[Thing]
+proc getFilteredThingsOrDefault(defaultList: seq[Thing], filePath: string = SAVE_FILE): seq[Thing] =
+  let filteredListFileStream = newFileStream(filePath, fmRead)
+  var configRoot: ConfigRoot
   if not(isNil(filteredListFileStream)):
-    load(filteredListFileStream, things)
+    load(filteredListFileStream, configRoot)
     filteredListFileStream.close()
-    return things
+    return configRoot.thingList
   else:
     return defaultList
 
-proc writeRestToOutputFile(rest: seq[Thing]): void =
-  let filteredOutputFileStream = newFileStream(SAVE_FILE, fmWrite)
-  dump(rest, filteredOutputFileStream)
-  filteredOutputFileStream.close()
+proc writeRestToOutputFile(rest: seq[Thing], outputPath: string = SAVE_FILE): void = createOMTConfig(rest, outputPath)
 
 proc resetRest(): void =
   echo "Removing save file: " & SAVE_FILE & "..."
@@ -101,14 +103,13 @@ proc createOMTProject(optParser: var OptParser): void =
 
   echo "Creating project..."
 
-  let configFileOutputStream = newFileStream(joinPath(projectPath, OMT_CONFIG), fmWrite)
-  dump(ConfigRoot(defaultList: @[]), configFileOutputStream)
-  configFileOutputStream.close()
+  createOMTConfig(@[], joinPath(projectPath, OMT_CONFIG))
 
 proc handleGet(optParser: var OptParser): void =
   var
     things: seq[Thing]
     dryrun: bool = false
+    outputPath: string
 
   while true:
     optParser.next()
@@ -121,14 +122,22 @@ proc handleGet(optParser: var OptParser): void =
         load(optParser.val, things)
       of "f", "file":
         try:
-          things = retrieveOMTConfigFromFile(optParser.val).defaultList
+          things = retrieveOMTConfigFromFile(optParser.val).thingList
+          if len(things) == 0:
+            raise newException(IOError, "The specified file does not contain a <thingList> or it is empty!")
         except:
           echo "File is no valid omt configuration!"
           echo getCurrentException().name
           echo getCurrentExceptionMsg()
           quit()
       of "o", "output":
-        echo "TODO: implement --output flag!"
+        try:
+          outputPath = optParser.val
+        except:
+          echo "Output file is invalid!"
+          echo getCurrentException().name
+          echo getCurrentExceptionMsg()
+          quit()
       else:
         # just ignore unwanted flags
         discard
@@ -140,8 +149,8 @@ proc handleGet(optParser: var OptParser): void =
           # Load Config #
           let configRoot = retrieveOMTConfig()
 
-          let defaultList = configRoot.defaultList
-          things = getFilteredThingsOrDefault(defaultList)
+          let thingList = configRoot.thingList
+          things = getFilteredThingsOrDefault(thingList)
         except:
           echo "Could not find valid configuration!\n" &
             "Either use <" & OMT_CONFIG & ">, <" & SAVE_FILE & "> or provide string via '-s=<string>'!\n"
@@ -158,7 +167,7 @@ proc handleGet(optParser: var OptParser): void =
   let sampleResult = getThingAndRest(things)
 
   if not dryrun:
-    writeRestToOutputFile(sampleResult.rest)
+    writeRestToOutputFile(sampleResult.rest, outputPath)
 
   echo "Here's your thing: " & sampleResult.thing
 
