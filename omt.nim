@@ -9,12 +9,17 @@ import os
 # examples are run
 randomize()
 
-type
-  ConfigRoot = object
-    defaultList: seq[string]
+#########
+# Types #
+#########
 
 type
   Thing = string
+
+type
+  ConfigRoot = object
+    defaultList: seq[Thing]
+
 
 ##############
 # Procedures #
@@ -48,6 +53,7 @@ proc writeRestToOutputFile(rest: seq[Thing]): void =
   dump(rest, filteredOutputFileStream)
   filteredOutputFileStream.close()
 
+
 #################
 # Actual Script #
 #################
@@ -76,7 +82,6 @@ writeRestToOutputFile(sampleResult.rest)
 
 
 # Some CLI output
-
 echo "Default: " & configRoot.defaultList
 echo "Things: " & things
 echo "Sample: " & sampleResult.thing
