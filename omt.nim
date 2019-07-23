@@ -53,12 +53,21 @@ proc writeRestToOutputFile(rest: seq[Thing]): void =
   dump(rest, filteredOutputFileStream)
   filteredOutputFileStream.close()
 
+proc showHelp(): void =
+  echo "TODO help!"
 
 #################
 # Actual Script #
 #################
 
+# Load Config #
+let configRoot = retrieveOMTConfig()
+
 # Parse arguments #
+
+if paramCount() == 0:
+  showHelp()
+  quit()
 
 var params = initOptParser(commandLineParams())
 while true:
@@ -71,18 +80,19 @@ while true:
     else:
       echo "Option and Value ", params.key, ", ", params.val
   of cmdArgument:
-    echo "Argument: ", params.key
+    if params.pos != 0:
+      raise newException(IOError, "Error: Arguments have to directly follow the <omt> command!")
+    case params.key
+    of "create":
+      echo "Argument: ", params.key
+    of "get":
+      let things = getFilteredThingsOrDefault(configRoot.defaultList)
+      let sampleResult = getThingAndRest(things)
+      writeRestToOutputFile(sampleResult.rest)
 
-# Load Config #
-let configRoot = retrieveOMTConfig()
+      # Some CLI output
+      echo "Default: " & configRoot.defaultList
+      echo "Things: " & things
+      echo "Sample: " & sampleResult.thing
+      echo "Filtered List: " & sampleResult.rest
 
-let things = getFilteredThingsOrDefault(configRoot.defaultList)
-let sampleResult = getThingAndRest(things)
-writeRestToOutputFile(sampleResult.rest)
-
-
-# Some CLI output
-echo "Default: " & configRoot.defaultList
-echo "Things: " & things
-echo "Sample: " & sampleResult.thing
-echo "Filtered List: " & sampleResult.rest
