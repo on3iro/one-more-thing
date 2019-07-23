@@ -39,12 +39,14 @@ proc getThingAndRest(things: seq[Thing]): tuple[thing: Thing, rest: seq[Thing]] 
     item != thing)
   return (thing: thing, rest: filteredList)
 
-proc retrieveOMTConfig(): ConfigRoot =
-  let configStream = newFileStream(OMT_CONFIG)
+proc retrieveOMTConfigFromFile(path: string): ConfigRoot =
+  let configStream = newFileStream(path)
   var configRoot: ConfigRoot
   load(configStream, configRoot)
   configStream.close()
   return configRoot
+
+proc retrieveOMTConfig(): ConfigRoot = retrieveOMTConfigFromFile(OMT_CONFIG)
 
 proc getFilteredThingsOrDefault(defaultList: seq[Thing]): seq[Thing] =
   let filteredListFileStream = newFileStream(SAVE_FILE, fmRead)
@@ -118,12 +120,18 @@ proc handleGet(optParser: var OptParser): void =
       of "s", "string":
         load(optParser.val, things)
       of "f", "file":
-        echo "TODO: implement --file flag!"
+        try:
+          things = retrieveOMTConfigFromFile(optParser.val).defaultList
+        except:
+          echo "File is no valid omt configuration!"
+          echo getCurrentException().name
+          echo getCurrentExceptionMsg()
+          quit()
       of "o", "output":
         echo "TODO: implement --output flag!"
       else:
         # just ignore unwanted flags
-        break
+        discard
     of cmdArgument:
       raise newException(IOError, "Only a single argument is allowed!")
     of cmdEnd:
@@ -134,10 +142,11 @@ proc handleGet(optParser: var OptParser): void =
 
           let defaultList = configRoot.defaultList
           things = getFilteredThingsOrDefault(defaultList)
-
         except:
           echo "Could not find valid configuration!\n" &
             "Either use <" & OMT_CONFIG & ">, <" & SAVE_FILE & "> or provide string via '-s=<string>'!\n"
+          echo getCurrentException().name
+          echo getCurrentExceptionMsg()
           quit()
       break
 
