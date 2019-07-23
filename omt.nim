@@ -4,6 +4,15 @@ import yaml/serialization, streams
 import parseopt
 import os
 
+#[
+  TODO
+  * Save list of picked things to save file
+  * interactive get
+  * interactive create
+  * undo
+  * help
+]#
+
 # Call randomize() once to initialize the default random number generator
 # If this is not called, the same results will occur every time these
 # examples are run
@@ -29,9 +38,9 @@ const OMT_CONFIG = "omt.yaml"
 const SAVE_FILE = "omt_save.yaml"
 
 
-##############
-# Procedures #
-##############
+###########
+# Helpers #
+###########
 
 proc getThingAndRest(things: seq[Thing]): tuple[thing: Thing, rest: seq[Thing]] =
   let thing = sample(things)
@@ -53,7 +62,7 @@ proc retrieveOMTConfigFromFile(path: string): ConfigRoot =
 
 proc retrieveOMTConfig(): ConfigRoot = retrieveOMTConfigFromFile(OMT_CONFIG)
 
-proc getFilteredThingsOrDefault(defaultList: seq[Thing], filePath: string = SAVE_FILE): seq[Thing] =
+proc getSavedThingsOrDefault(defaultList: seq[Thing], filePath: string = SAVE_FILE): seq[Thing] =
   try:
     let filteredConfig = retrieveOMTConfigFromFile(filePath)
     return filteredConfig.thingList
@@ -62,13 +71,19 @@ proc getFilteredThingsOrDefault(defaultList: seq[Thing], filePath: string = SAVE
 
 proc writeRestToOutputFile(rest: seq[Thing], outputPath: string = SAVE_FILE): void = createOMTConfig(rest, outputPath)
 
-proc resetRest(): void =
+
+################
+# CLI Handlers #
+################
+
+proc resetSave(): void =
   echo "Removing save file: " & SAVE_FILE & "..."
   removeFile(SAVE_FILE)
 
 proc showHelp(): void =
   # TODO
   echo "TODO help!"
+  quit()
 
 proc createOMTProject(optParser: var OptParser): void =
   var projectPath: string = ""
@@ -147,7 +162,7 @@ proc handleGet(optParser: var OptParser): void =
           let configRoot = retrieveOMTConfig()
 
           let thingList = configRoot.thingList
-          things = getFilteredThingsOrDefault(thingList)
+          things = getSavedThingsOrDefault(thingList)
         except:
           echo "Could not find valid configuration!\n" &
             "Either use <" & OMT_CONFIG & ">, <" & SAVE_FILE & "> or provide string via '-s=<string>'!\n"
@@ -171,14 +186,13 @@ proc handleGet(optParser: var OptParser): void =
   quit()
 
 
-#################
-# Actual Script #
-#################
+########
+# MAIN #
+########
 
 proc main(): void =
   if paramCount() == 0:
     showHelp()
-    quit()
 
   var optParser = initOptParser(commandLineParams())
   while true:
@@ -193,12 +207,11 @@ proc main(): void =
       case optParser.key
       of "help":
         showHelp()
-        quit()
       of "create":
         createOMTProject(optParser)
       of "get":
         handleGet(optParser)
       of "reset":
-        resetRest()
+        resetSave()
 
 main()
