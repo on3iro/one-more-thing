@@ -1,6 +1,8 @@
 from random import randomize, sample
 from sequtils import filter
 import yaml/serialization, streams
+import parseopt
+import os
 
 # Call randomize() once to initialize the default random number generator
 # If this is not called, the same results will occur every time these
@@ -13,6 +15,21 @@ type
 
 type
   Thing = string
+
+# Parse arguments #
+
+var params = initOptParser(commandLineParams())
+while true:
+  params.next()
+  case params.kind
+  of cmdEnd: break
+  of cmdShortOption, cmdLongOption:
+    if params.val == "":
+      echo "Option: ", params.key
+    else:
+      echo "Option and Value ", params.key, ", ", params.val
+  of cmdArgument:
+    echo "Argument: ", params.key
 
 # Load Config #
 
