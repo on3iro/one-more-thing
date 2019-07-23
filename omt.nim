@@ -26,7 +26,7 @@ type
 #############
 
 const OMT_CONFIG = "omt.yaml"
-const SAVE_FILE = "filtered.yaml"
+const SAVE_FILE = "omt_save.yaml"
 
 
 ##############
@@ -54,13 +54,10 @@ proc retrieveOMTConfigFromFile(path: string): ConfigRoot =
 proc retrieveOMTConfig(): ConfigRoot = retrieveOMTConfigFromFile(OMT_CONFIG)
 
 proc getFilteredThingsOrDefault(defaultList: seq[Thing], filePath: string = SAVE_FILE): seq[Thing] =
-  let filteredListFileStream = newFileStream(filePath, fmRead)
-  var configRoot: ConfigRoot
-  if not(isNil(filteredListFileStream)):
-    load(filteredListFileStream, configRoot)
-    filteredListFileStream.close()
-    return configRoot.thingList
-  else:
+  try:
+    let filteredConfig = retrieveOMTConfigFromFile(filePath)
+    return filteredConfig.thingList
+  except:
     return defaultList
 
 proc writeRestToOutputFile(rest: seq[Thing], outputPath: string = SAVE_FILE): void = createOMTConfig(rest, outputPath)
@@ -109,7 +106,7 @@ proc handleGet(optParser: var OptParser): void =
   var
     things: seq[Thing]
     dryrun: bool = false
-    outputPath: string
+    outputPath: string = SAVE_FILE
 
   while true:
     optParser.next()
