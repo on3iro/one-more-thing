@@ -64,7 +64,7 @@ proc writeRestToOutputFile(rest: seq[Thing]): void =
 proc showHelp(): void =
   echo "TODO help!"
 
-proc handleGet(optParser: var OptParser, defaultList: seq[Thing]): void =
+proc handleGet(optParser: var OptParser): void =
   var
     things: seq[Thing]
     dryrun: bool = false
@@ -72,10 +72,6 @@ proc handleGet(optParser: var OptParser, defaultList: seq[Thing]): void =
   while true:
     optParser.next()
     case optParser.kind
-    of cmdEnd:
-      if len(things) == 0:
-        things = getFilteredThingsOrDefault(defaultList)
-      break
     of cmdShortOption, cmdLongOption:
       case optParser.key
       of "d", "dry":
@@ -87,6 +83,21 @@ proc handleGet(optParser: var OptParser, defaultList: seq[Thing]): void =
         break
     of cmdArgument:
       raise newException(IOError, "Only a single argument is allowed!")
+    of cmdEnd:
+      if len(things) == 0:
+        try:
+          # Load Config #
+          let configRoot = retrieveOMTConfig()
+
+          let defaultList = configRoot.defaultList
+          things = getFilteredThingsOrDefault(defaultList)
+
+        except:
+          echo "Could not find valid configuration!\n" &
+            "Either use <" & OMT_CONFIG & ">, <" & SAVE_FILE & "> or provide string via '-s=<string>'!\n"
+          quit()
+      break
+
 
   if things.len == 0:
     echo "List is empty!"
@@ -97,20 +108,13 @@ proc handleGet(optParser: var OptParser, defaultList: seq[Thing]): void =
   if not dryrun:
     writeRestToOutputFile(sampleResult.rest)
 
-  # Some CLI output
-  echo "Default: " & defaultList
-  echo "Things: " & things
-  echo "Sample: " & sampleResult.thing
-  echo "Filtered List: " & sampleResult.rest
+  echo "Here's your thing: " & sampleResult.thing
 
   quit()
 
 #################
 # Actual Script #
 #################
-
-# Load Config #
-let configRoot = retrieveOMTConfig()
 
 # Parse arguments #
 
@@ -135,4 +139,4 @@ while true:
     of "create":
       echo "Argument: ", optParser.key
     of "get":
-      handleGet(optParser, configRoot.defaultList)
+      handleGet(optParser)
