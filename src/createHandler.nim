@@ -1,10 +1,27 @@
 import os
 import parseopt
-import yaml/serialization, streams
 
 import types
-import helpers
+from helpers import createOMTConfig
 import constants
+
+
+###########
+# Helpers #
+###########
+
+proc showHelpAndQuit() =
+  echo """
+omt create <projectName>
+
+Creates a directory by the specified project name and a default
+omt.yaml configuration.
+  """
+  quit()
+
+###########
+# Handler #
+###########
 
 proc createOMTProject*(optParser: var OptParser): void =
   var projectPath: string = ""
@@ -20,13 +37,7 @@ proc createOMTProject*(optParser: var OptParser): void =
     of cmdShortOption, cmdLongOption:
       case optParser.key
       of "h", "help":
-        echo """
-omt create <projectName>
-  
-  Creates a directory by the specified project name and a default
-  omt.yaml configuration.
-        """
-        quit()
+        showHelpAndQuit()
       else:
         discard
     of cmdEnd:
@@ -49,4 +60,4 @@ omt create <projectName>
     outputPath = joinPath(projectPath, OMT_CONFIG)
   )
 
-
+  quit()

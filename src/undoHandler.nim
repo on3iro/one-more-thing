@@ -1,10 +1,28 @@
-import os
 import parseopt
-import yaml/serialization, streams
 
 import types
-import helpers
+from helpers import retrieveOMTConfigFromFile, writeSaveFile
 import constants
+
+
+###########
+# Helpers #
+###########
+
+proc showHelpAndQuit() =
+  echo """
+omt undo
+
+Moves the last item from the <pickedThings> list of an omt configuration back to its <thingsList>.
+
+-f=<fileName>, --file=<fileName>
+Uses the specified YAML file instead of the default 'omt_save.yaml'.
+  """
+  quit()
+
+###########
+# Handler #
+###########
 
 proc handleUndo*(optParser: var OptParser) =
   var saveFilePath: string = SAVE_FILE
@@ -17,15 +35,7 @@ proc handleUndo*(optParser: var OptParser) =
     of cmdShortOption, cmdLongOption:
       case optParser.key
       of "h", "help":
-        echo """
-omt undo
-
-  Moves the last item from the <pickedThings> list of an omt configuration back to its <thingsList>.
-
-  -f=<fileName>, --file=<fileName>
-      Uses the specified YAML file instead of the default 'omt_save.yaml'.
-        """
-        quit()
+        showHelpAndQuit()
       of "f", "file":
         saveFilePath = optParser.val
       else:
@@ -43,6 +53,7 @@ omt undo
     echo "Thing <" & thingToUndo & "> will be undone!"
     echo "Writing save file..."
     writeSaveFile(ConfigRoot(thingList: updatedThingList, pickedThings: pickedThings), outputPath = saveFilePath)
+    quit()
   except:
     echo "Could not undo!"
     echo getCurrentException().name
