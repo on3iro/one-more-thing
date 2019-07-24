@@ -6,7 +6,7 @@ omt is a simple command line tool for retrieving random values from string lists
 
 Either download the provided `omt` binary from the releases page of this repository
 or build it yourself by cloning the repository, installing Nim to your system and
-running `nim c omt.nim`.
+running `nimble install && nim c omt.nim`.
 
 ## Usage
 
