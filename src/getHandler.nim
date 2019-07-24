@@ -1,14 +1,24 @@
-import os
+from random import randomize
 import parseopt
 import yaml/serialization, streams
 
+from helpers import
+  retrieveOMTConfigFromFile,
+  retrieveOMTConfig,
+  getSavedConfigOrDefault,
+  getThingAndRest,
+  upateSaveFile
 import types
-import helpers
 import constants
 
 proc handleGet*(optParser: var OptParser): void =
+  # Call randomize() once to initialize the default random number generator
+  # If this is not called, the same results will occur every time these
+  # examples are run
+  randomize()
+
   var
-    things: seq[Thing]
+    things: ThingList
     dryrun: bool = false
     outputPath: string = SAVE_FILE
     configRoot: ConfigRoot

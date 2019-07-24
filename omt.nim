@@ -1,11 +1,12 @@
-from random import randomize, sample
-from sequtils import filter
-import yaml/serialization, streams
 import parseopt
 import os
 
-from types import Thing, ThingList, ConfigRoot
-import createHandler, getHandler, helpHandler, resetHandler, undoHandler
+import 
+  src/createHandler,
+  src/getHandler,
+  src/helpHandler,
+  src/resetHandler,
+  src/undoHandler
 
 #[
   TODO
@@ -17,10 +18,6 @@ import createHandler, getHandler, helpHandler, resetHandler, undoHandler
   * ASCI support
 ]#
 
-# Call randomize() once to initialize the default random number generator
-# If this is not called, the same results will occur every time these
-# examples are run
-randomize()
 
 
 ########
