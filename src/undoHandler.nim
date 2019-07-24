@@ -1,4 +1,5 @@
 import parseopt
+import colorize
 
 import types
 from helpers import retrieveOMTConfigFromFile, writeSaveFile
@@ -10,14 +11,13 @@ import constants
 ###########
 
 proc showHelpAndQuit() =
+  echo "\nomt".fgLightBlue & " undo".fgGreen
   echo """
-omt undo
 
 Moves the last item from the <pickedThings> list of an omt configuration back to its <thingsList>.
-
--f=<fileName>, --file=<fileName>
-Uses the specified YAML file instead of the default 'omt_save.yaml'.
   """
+  echo "\t-f".fgMagenta & "=<fileName>, " & "--file".fgMagenta & "=<fileName>"
+  echo "\t\tUses the specified YAML file instead of the default 'omt_save.yaml'."
   quit()
 
 ###########

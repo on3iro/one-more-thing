@@ -1,6 +1,7 @@
 from random import randomize
 import parseopt
 import yaml/serialization, streams
+import colorize
 
 from helpers import
   retrieveOMTConfigFromFile,
@@ -17,25 +18,26 @@ import constants
 ###########
 
 proc showHelpAndQuit() =
+  echo "\nomt".fgBlue & " get".fgGreen
   echo """
-omt get [flags]
 
-  Gets a random value from a 'thingList' either by using a local configuraition or a provided file/string.
-
-  -d, --dry
-    Runs the command as dryrun not writing an output save file
-
-  -s=<yamlFormedListString>, --string=<yamlFormedListString>
-    Uses the provided list string instead of a config file.
-    Careful: This might still overwrite an existing omt_save.yaml if you
-    do not run the command as dryrun (see [-d])!
-
-    Example:
-      omt get -s="['a', 'b', 'c']"
-
-  -o=<nameOfOutputFile>, --output=<nameOfOutputFile>
-    Saves the configuration to the specified outputfile instead of omt_save.yaml
+Gets a random value from a 'thingList' either by using a local configuraition or a provided file/string.
   """
+
+  echo "\t-d".fgMagenta & ", " & "--dry".fgMagenta
+  echo "\t\tRuns the command as dryrun not writing an output save file"
+  echo "\n"
+
+  echo "\t-s".fgMagenta & "=<yamlFormedListString>, " & "--string".fgMagenta & "=<yamlFormedListString>"
+  echo "\t\tUses the provided list string instead of a config file."
+  echo "\t\tCareful: This might still overwrite an existing omt_save.yaml if you do not run the command as dryrun (see [-d])!"
+  echo "\t\tExample:"
+  echo "\t\t\tomt get -s=\"['a', 'b', 'c']\""
+  echo "\n"
+
+  echo "\t-o".fgMagenta & "=<nameOfOutputFile>, " & "--output".fgMagenta & "=<nameOfOutputFile>"
+  echo "\t\tSaves the configuration to the specified outputfile instead of omt_save.yaml"
+  echo "\n"
   quit()
 
 proc getConfigFromFile(path: string): ThingList =

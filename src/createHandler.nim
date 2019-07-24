@@ -1,5 +1,6 @@
 import os
 import parseopt
+import colorize
 
 import types
 from helpers import createOMTConfig
@@ -11,8 +12,9 @@ import constants
 ###########
 
 proc showHelpAndQuit() =
+  echo "\nomt".fgLightBlue & " create".fgGreen & " <projectName>"
+
   echo """
-omt create <projectName>
 
 Creates a directory by the specified project name and a default
 omt.yaml configuration.
