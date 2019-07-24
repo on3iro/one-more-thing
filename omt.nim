@@ -4,6 +4,8 @@ import yaml/serialization, streams
 import parseopt
 import os
 
+from types import Thing, ThingList, ConfigRoot
+
 #[
   TODO
   * Refactor
@@ -18,18 +20,6 @@ import os
 # If this is not called, the same results will occur every time these
 # examples are run
 randomize()
-
-#########
-# Types #
-#########
-
-type
-  Thing = string
-
-type
-  ConfigRoot = object
-    thingList: seq[Thing]
-    pickedThings: seq[Thing]
 
 
 #############
@@ -51,8 +41,8 @@ proc getThingAndRest(things: seq[Thing]): tuple[thing: Thing, rest: seq[Thing]] 
   return (thing: thing, rest: filteredList)
 
 proc createOMTConfig(
-  things: seq[Thing] = @[],
-  pickedThings: seq[Thing] = @[],
+  things: ThingList,
+  pickedThings: ThingList,
   outputPath: string
 ): void =
   let configFileOutputStream = newFileStream(outputPath, fmWrite)
@@ -176,7 +166,11 @@ omt create <projectName>
 
   echo "Creating project..."
 
-  createOMTConfig(things = @[], outputPath = joinPath(projectPath, OMT_CONFIG))
+  createOMTConfig(
+    things = cast[ThingList](@[]),
+    pickedThings = cast[ThingList](@[]),
+    outputPath = joinPath(projectPath, OMT_CONFIG)
+  )
 
 proc handleUndo(optParser: var OptParser) =
   var saveFilePath: string = SAVE_FILE
