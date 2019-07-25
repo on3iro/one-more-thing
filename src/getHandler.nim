@@ -35,6 +35,10 @@ Gets a random value from a 'thingList' either by using a local configuraition or
   echo "\t\t\tomt get -s=\"['a', 'b', 'c']\""
   echo "\n"
 
+  echo "\t-f".fgMagenta & "=<nameOfInputFile>, " & "--file".fgMagenta & "=<nameOfInputFile>"
+  echo "\t\tTakes the specified input file instead of the default omt.yaml configuration as input."
+  echo "\n"
+
   echo "\t-o".fgMagenta & "=<nameOfOutputFile>, " & "--output".fgMagenta & "=<nameOfOutputFile>"
   echo "\t\tSaves the configuration to the specified outputfile instead of omt_save.yaml"
   echo "\n"
