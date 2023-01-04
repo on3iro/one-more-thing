@@ -1,8 +1,27 @@
 [package]
 name = "one-more-thing"
-version = "0.1.0"
+version = "1.0.0"
 edition = "2021"
+description = "Randomly pick items from a given list"
+license = "MIT"
+repository = "https://github.com/on3iro/one-more-thing"
+readme = "README.md"
+keywords = ["random", "list", "picker"]
+categories = ["command-line-utilities"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[[bin]]
+name = "omt"
+path = "src/main.rs"
+
 [dependencies]
+anyhow = { version = "1", features = ["backtrace"] }
+clap = { version = "4", features = ["derive"] }
+env_logger = "0.10"
+log = "0.4"
+serde = { version = "1", features = ["derive"] }
+serde_yaml = { version = "0.9.*"}
+serde_json = { version = "1" }
+thiserror = "1.0"
+rand = { version = "0.8", features = ["std", "std_rng"] }
