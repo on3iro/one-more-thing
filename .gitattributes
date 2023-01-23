@@ -1,2 +1,1 @@
-* linguist-vendored
-*.nim linguist-vendored=false
+*.nim linguist-vendored=true
